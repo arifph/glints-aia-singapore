@@ -26,7 +26,7 @@ public class Main {
 		System.out.println();
 		String[] arrayOfCommand = command.split(" "); // Split the command to array
 
-		// Draw something
+		// Execute the command
 		if (Objects.equals(arrayOfCommand[0], "Q")) {
 			System.exit(0);
 		} else if (Objects.equals(arrayOfCommand[0], "C")) {
@@ -36,7 +36,7 @@ public class Main {
 			width = Integer.parseInt(arrayOfCommand[1]) + 2;
 			height = Integer.parseInt(arrayOfCommand[2]) + 2;
 
-			// Create canvas
+			// Create a canvas
 			canvas = new String[height][width];
 			for (int h = 0; h < height; h++) {
 				for (int w = 0; w < width; w++) {
@@ -57,47 +57,77 @@ public class Main {
 				System.out.println("Please create a canvas first!\n");
 			} else {
 				if (Objects.equals(arrayOfCommand[0], "L")) {
+					// Check whether it is horizontal or vertical line
 					if (Objects.equals(arrayOfCommand[1], arrayOfCommand[3])
 							|| Objects.equals(arrayOfCommand[2], arrayOfCommand[4])) {
+						// Initialize x1, y1, x2, y2
 						int x1 = Integer.parseInt(arrayOfCommand[1]);
 						int y1 = Integer.parseInt(arrayOfCommand[2]);
 						int x2 = Integer.parseInt(arrayOfCommand[3]);
 						int y2 = Integer.parseInt(arrayOfCommand[4]);
 						
-						for (int h = y1; h <= y2; h++) {
-							for (int w = x1; w <= x2; w++) {
-								canvas[h][w] = "x";
+						// Draw Line
+						if (isInsideCanvas(width, height, x1, y1) && isInsideCanvas(width, height, x2, y2)) {
+							// Decide the start point and the end point
+							if (x1 <= x2 && y1 <= y2) {
+								canvas = drawLine(canvas, x1, y1, x2, y2);
+							} else if (x1 <= x2 && y1 > y2) {
+								canvas = drawLine(canvas, x1, y2, x2, y1);
+							} else if (x1 > x2 && y1 <= y2) {
+								canvas = drawLine(canvas, x2, y1, x1, y2);
+							} else if (x1 > x2 && y1 > y2) {
+								canvas = drawLine(canvas, x2, y2, x1, y1);
 							}
+							draw(canvas, height, width);
+						} else {
+							System.out.println("A point's coordinate is outside the canvas. Please check it again!\n");
 						}
-						draw(canvas, height, width);
 					} else {
 						System.out.println("Only horizontal or vertical lines are supported.\n");
 					}
 				} else if (Objects.equals(arrayOfCommand[0], "R")) {
+					// Initialize x1, y1, x2, y2
 					int x1 = Integer.parseInt(arrayOfCommand[1]);
 					int y1 = Integer.parseInt(arrayOfCommand[2]);
 					int x2 = Integer.parseInt(arrayOfCommand[3]);
 					int y2 = Integer.parseInt(arrayOfCommand[4]);
 					
-					for (int h = y1; h <= y2; h++) {
-						for (int w = x1; w <= x2; w++) {
-							if (w == x1 || w == x2 || h == y1 || h == y2) {
-								canvas[h][w] = "x";
-							}
+					if (isInsideCanvas(width, height, x1, y1) && isInsideCanvas(width, height, x2, y2)) {
+						// Decide the start point and the end point
+						if (x1 <= x2 && y1 <= y2) {
+							canvas = drawRectangle(canvas, x1, y1, x2, y2);
+						} else if (x1 <= x2 && y1 > y2) {
+							canvas = drawRectangle(canvas, x1, y2, x2, y1);
+						} else if (x1 > x2 && y1 <= y2) {
+							canvas = drawRectangle(canvas, x2, y1, x1, y2);
+						} else if (x1 > x2 && y1 > y2) {
+							canvas = drawRectangle(canvas, x2, y2, x1, y1);
 						}
+						draw(canvas, height, width);
+					} else {
+						System.out.println("A point's coordinate is outside the canvas. Please check it again!\n");
 					}
-					draw(canvas, height, width);
 				} else if (Objects.equals(arrayOfCommand[0], "B")) {
-					
+					// Detect Rectangle
+					// Fill with colour outside/inside rectangle
+					int x = Integer.parseInt(arrayOfCommand[1]);
+					int y = Integer.parseInt(arrayOfCommand[2]);
+					String c = arrayOfCommand[3];
+					if (isInsideCanvas(width, height, x, y)) {
+						
+					} else {
+						System.out.println("A point's coordinate is outside the canvas. Please check it again!\n");
+					}
 				} else {
 					System.out.println("Unknown command.\n");
 				}
 			}
 		}
 		executeCommand(null, isCanvasCreated, canvas, height, width);
-		cmdScanner.close();
+		cmdScanner.close(); // Close scanner to prevent leaked resource
 	}
 	
+	// A method to draw the canvas and everything in it
 	public static void draw(String[][] canvas, int height, int width) {
 		for (int h = 0; h < height; h++) {
 			for (int w = 0; w < width; w++) {
@@ -106,6 +136,34 @@ public class Main {
 			System.out.println();
 		}
 		System.out.println();
+	}
+	
+	public static boolean isInsideCanvas(int width, int height, int x, int y) {
+		if (x >= width - 1 || y >= height - 1) {
+			return false;
+		} else {
+			return true;
+		}
+	}
+	
+	public static String[][] drawLine(String[][] canvas, int xStart, int yStart, int xEnd, int yEnd) {
+		for (int h = yStart; h <= yEnd; h++) {
+			for (int w = xStart; w <= xEnd; w++) {
+				canvas[h][w] = "x";
+			}
+		}
+		return canvas;
+	}
+	
+	public static String[][] drawRectangle(String[][] canvas, int xStart, int yStart, int xEnd, int yEnd) {
+		for (int h = yStart; h <= yEnd; h++) {
+			for (int w = xStart; w <= xEnd; w++) {
+				if (w == xStart || w == xEnd || h == yStart || h == yEnd) {
+					canvas[h][w] = "x";
+				}
+			}
+		}
+		return canvas;
 	}
 
 }
