@@ -4,22 +4,22 @@ import java.util.Objects;
 import java.util.Scanner;
 
 public class Main {
+	private static String command = null;
 
 	public static void main(String[] args) {
-		String command = null;
 		boolean isCanvasCreated = false;
 		String[][] canvas = null;
 		int height = 0;
 		int width = 0;
 		try {
-			executeCommand(command, isCanvasCreated, canvas, height, width);
+			executeCommand(isCanvasCreated, canvas, height, width);
 		} catch (Exception e) {
 			System.out.print("An error occured: ");
 			e.printStackTrace();
 		}
 	}
 
-	public static void executeCommand(String command, boolean isCanvasCreated, String[][] canvas, int height, int width) {
+	public static void executeCommand(boolean isCanvasCreated, String[][] canvas, int height, int width) {
 		Scanner cmdScanner = new Scanner(System.in);
 		System.out.print("Enter command: ");
 		command = cmdScanner.nextLine().trim();
@@ -28,6 +28,7 @@ public class Main {
 
 		// Execute the command
 		if (Objects.equals(arrayOfCommand[0], "Q")) {
+			cmdScanner.close(); // Close scanner to prevent leaked resource
 			System.exit(0);
 		} else if (Objects.equals(arrayOfCommand[0], "C")) {
 			isCanvasCreated = true;
@@ -38,17 +39,7 @@ public class Main {
 
 			// Create a canvas
 			canvas = new String[height][width];
-			for (int h = 0; h < height; h++) {
-				for (int w = 0; w < width; w++) {
-					if (h == 0 || h == height - 1) {
-						canvas[h][w] = "-";
-					} else if (w == 0 || w == width - 1) {
-						canvas[h][w] = "|";
-					} else {
-						canvas[h][w] = " ";
-					}
-				}
-			}
+			canvas = sketchCanvas(canvas, height, width);
 			draw(canvas, height, width);
 		} else {
 			if (isCanvasCreated == false) {
@@ -70,13 +61,13 @@ public class Main {
 						if (isInsideCanvas(width, height, x1, y1) && isInsideCanvas(width, height, x2, y2)) {
 							// Decide the start point and the end point
 							if (x1 <= x2 && y1 <= y2) {
-								canvas = drawLine(canvas, x1, y1, x2, y2);
+								canvas = sketchLine(canvas, x1, y1, x2, y2);
 							} else if (x1 <= x2 && y1 > y2) {
-								canvas = drawLine(canvas, x1, y2, x2, y1);
+								canvas = sketchLine(canvas, x1, y2, x2, y1);
 							} else if (x1 > x2 && y1 <= y2) {
-								canvas = drawLine(canvas, x2, y1, x1, y2);
+								canvas = sketchLine(canvas, x2, y1, x1, y2);
 							} else if (x1 > x2 && y1 > y2) {
-								canvas = drawLine(canvas, x2, y2, x1, y1);
+								canvas = sketchLine(canvas, x2, y2, x1, y1);
 							}
 							draw(canvas, height, width);
 						} else {
@@ -95,26 +86,25 @@ public class Main {
 					if (isInsideCanvas(width, height, x1, y1) && isInsideCanvas(width, height, x2, y2)) {
 						// Decide the start point and the end point
 						if (x1 <= x2 && y1 <= y2) {
-							canvas = drawRectangle(canvas, x1, y1, x2, y2);
+							canvas = sketchRectangle(canvas, x1, y1, x2, y2);
 						} else if (x1 <= x2 && y1 > y2) {
-							canvas = drawRectangle(canvas, x1, y2, x2, y1);
+							canvas = sketchRectangle(canvas, x1, y2, x2, y1);
 						} else if (x1 > x2 && y1 <= y2) {
-							canvas = drawRectangle(canvas, x2, y1, x1, y2);
+							canvas = sketchRectangle(canvas, x2, y1, x1, y2);
 						} else if (x1 > x2 && y1 > y2) {
-							canvas = drawRectangle(canvas, x2, y2, x1, y1);
+							canvas = sketchRectangle(canvas, x2, y2, x1, y1);
 						}
 						draw(canvas, height, width);
 					} else {
 						System.out.println("A point's coordinate is outside the canvas. Please check it again!\n");
 					}
 				} else if (Objects.equals(arrayOfCommand[0], "B")) {
-					// Detect Rectangle
-					// Fill with colour outside/inside rectangle
 					int x = Integer.parseInt(arrayOfCommand[1]);
 					int y = Integer.parseInt(arrayOfCommand[2]);
 					String c = arrayOfCommand[3];
 					if (isInsideCanvas(width, height, x, y)) {
-						
+						canvas = fillRectangle(canvas, height, width, x, y, c);
+						draw(canvas, height, width);
 					} else {
 						System.out.println("A point's coordinate is outside the canvas. Please check it again!\n");
 					}
@@ -123,8 +113,7 @@ public class Main {
 				}
 			}
 		}
-		executeCommand(null, isCanvasCreated, canvas, height, width);
-		cmdScanner.close(); // Close scanner to prevent leaked resource
+		executeCommand(isCanvasCreated, canvas, height, width);
 	}
 	
 	// A method to draw the canvas and everything in it
@@ -138,6 +127,21 @@ public class Main {
 		System.out.println();
 	}
 	
+	public static String[][] sketchCanvas(String[][] canvas, int height, int width) {
+		for (int h = 0; h < height; h++) {
+			for (int w = 0; w < width; w++) {
+				if (h == 0 || h == height - 1) {
+					canvas[h][w] = "-";
+				} else if (w == 0 || w == width - 1) {
+					canvas[h][w] = "|";
+				} else {
+					canvas[h][w] = " ";
+				}
+			}
+		}
+		return canvas;
+	}
+	
 	public static boolean isInsideCanvas(int width, int height, int x, int y) {
 		if (x >= width - 1 || y >= height - 1) {
 			return false;
@@ -146,7 +150,7 @@ public class Main {
 		}
 	}
 	
-	public static String[][] drawLine(String[][] canvas, int xStart, int yStart, int xEnd, int yEnd) {
+	public static String[][] sketchLine(String[][] canvas, int xStart, int yStart, int xEnd, int yEnd) {
 		for (int h = yStart; h <= yEnd; h++) {
 			for (int w = xStart; w <= xEnd; w++) {
 				canvas[h][w] = "x";
@@ -155,11 +159,87 @@ public class Main {
 		return canvas;
 	}
 	
-	public static String[][] drawRectangle(String[][] canvas, int xStart, int yStart, int xEnd, int yEnd) {
+	public static String[][] sketchRectangle(String[][] canvas, int xStart, int yStart, int xEnd, int yEnd) {
 		for (int h = yStart; h <= yEnd; h++) {
 			for (int w = xStart; w <= xEnd; w++) {
 				if (w == xStart || w == xEnd || h == yStart || h == yEnd) {
 					canvas[h][w] = "x";
+				}
+			}
+		}
+		return canvas;
+	}
+	
+	// A method to fill a rectangle
+	// P.S: I haven't finished the bucket fill method yet because I don't know how
+	// so I can only fill a rectangle
+	public static String[][] fillRectangle(String[][] canvas, int height, int width, int x, int y, String colour) {
+		if (!Objects.equals(canvas[y][x], "x")) {
+			fillToBottomRight:
+			for (int h = y; h < height - 1; h++) {
+				for (int w = x; w < width - 1; w++) {
+					if (Objects.equals(canvas[h][w], "x")) {
+						if (Objects.equals(canvas[h-1][w], "x") && Objects.equals(canvas[h][w-1], "x")) {
+							break fillToBottomRight;
+						} else if (Objects.equals(canvas[h][w-1], "x")) {
+							continue;
+						} else if (Objects.equals(canvas[h-1][w], "x")) {
+							break;
+						}
+					} else {
+						canvas[h][w] = colour;
+					}
+				}
+			}
+
+			fillToTopRight:
+			for (int h = y; h > 0; h--) {
+				for (int w = x; w < width - 1; w++) {
+					if (Objects.equals(canvas[h][w], "x")) {
+						if (Objects.equals(canvas[h+1][w], "x") && Objects.equals(canvas[h][w-1], "x")) {
+							break fillToTopRight;
+						} else if (Objects.equals(canvas[h][w-1], "x")) {
+							continue;
+						} else if (Objects.equals(canvas[h+1][w], "x")) {
+							break;
+						}
+					} else {
+						canvas[h][w] = colour;
+					}
+				}
+			}
+			
+			fillToBottomLeft:
+			for (int h = y; h < height - 1; h++) {
+				for (int w = x; w > 0; w--) {
+					if(Objects.equals(canvas[h][w], "x")) {
+						if (Objects.equals(canvas[h-1][w], "x") && Objects.equals(canvas[h][w+1], "x")) {
+							break fillToBottomLeft;
+						} else if (Objects.equals(canvas[h][w+1], "x")) {
+							continue;
+						} else if (Objects.equals(canvas[h-1][w], "x")) {
+							break;
+						}
+					} else {
+						canvas[h][w] = colour;
+					}
+				}
+			}
+			
+			fillToTopLeft:
+			for (int h = y; h > 0; h--) {
+				for (int w = x; w > 0; w--) {
+					if (Objects.equals(canvas[h][w], "x")) {
+						if (Objects.equals(canvas[h+1][w], "x") && Objects.equals(canvas[h][w+1], "x")) {
+							break fillToTopLeft;
+						} else if (Objects.equals(canvas[h][w+1], "x")) {
+							continue;
+						} else if (Objects.equals(canvas[h+1][w], "x")) {
+							break;
+						}
+					} else {
+						canvas[h][w] = colour;
+					}
 				}
 			}
 		}
